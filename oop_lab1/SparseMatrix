@@ -1,0 +1,206 @@
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#include <iostream>
+#include <ctime>
+using namespace std;
+
+struct node
+{
+	int data;
+	int column;
+	node* next;
+};
+
+void fill_matrix(node** arr, int n, int m) {
+	for (int i = 0; i < n; i++)
+	{
+		node* beg = nullptr;
+		node* current = nullptr;
+		for (int j = 0; j < m; j++)
+		{
+			int k = rand() % 3;
+			if (k == 0) {
+				int p = rand() % 100 - 50;
+				node* t = new node();
+				t->column = j;
+				t->data = p;
+				t->next = nullptr;
+				if (beg == nullptr) {
+					beg = t;
+					current = beg;
+				}
+				else {
+					current->next = t;
+					current = t;
+				}
+			}
+		}
+		arr[i] = beg;
+	}
+}
+
+void print_matrix(node** arr, int n, int m) {
+	for (int i = 0; i < n; i++)
+	{
+		node* p = arr[i];
+		for (int j = 0; j < m; j++)
+		{
+			if (p != nullptr && p->column == j) {
+				cout << p->data << "\t";
+				p = p->next;
+			}
+			else {
+				cout << "0\t";
+			}
+		}
+		cout << endl;
+	}
+	cout << endl;
+}
+
+int find_max_row(node** arr, int n, int m) {
+	int row = 0;
+	int max_sum = INT_MIN;
+	for (int i = 0; i < n; i++)
+	{
+		node* p = arr[i];
+		int sum = 0;
+		while (p != nullptr)
+		{
+			sum += p->data;
+			p = p->next;
+		}
+		if (sum > max_sum) {
+			max_sum = sum;
+			row = i;
+		}
+	}
+	return row;
+}
+
+void sort_up(int* a, int n) {
+	for (int i = 0; i < n - 1; i++)
+	{
+		for (int j = 0; j < n - 1; j++)
+		{
+			if (a[j] > a[j + 1]) {
+				int temp = a[j];
+				a[j] = a[j + 1];
+				a[j + 1] = temp;
+			}
+		}
+	}
+}
+
+void sort_down(int* a, int n) {
+	for (int i = 0; i < n - 1; i++)
+	{
+		for (int j = 0; j < n - 1; j++)
+		{
+			if (a[j] < a[j + 1]) {
+				int temp = a[j];
+				a[j] = a[j + 1];
+				a[j + 1] = temp;
+			}
+		}
+	}
+}
+
+int* form_vector(node** arr, int n, int m, int row) {
+	int* vec = new int[m];
+	node* p = arr[row];
+	for (int j = 0; j < m; j++)
+	{
+		if (p != nullptr && p->column == j) {
+			vec[j] = p->data;
+			p = p->next;
+		}
+		else {
+			vec[j] = 0;
+		}
+	}
+
+	if (arr[row] != nullptr && arr[row]->column == 0) {
+		if (arr[row]->data > 0) {
+			sort_up(vec, m);
+		}
+		else {
+			sort_down(vec, m);
+		}
+	}
+	else {
+		sort_down(vec, m);
+	}
+
+	return vec;
+}
+
+void sort_row_matrix(node** arr, int* vec, int n, int m, int row) {
+	node* p = arr[row];
+	while (p != nullptr)
+	{
+		node* t = p->next;
+		delete p;
+		p = t;
+	}
+	node* beg = nullptr;
+	node* current = nullptr;
+	for (int j = 0; j < m; j++)
+	{
+		if (vec[j] != 0) {
+			node* t = new node();
+			t->column = j;
+			t->data = vec[j];
+			t->next = nullptr;
+			if (beg == nullptr) {
+				beg = t;
+				current = beg;
+			}
+			else {
+				current->next = t;
+				current = t;
+			}
+		}
+	}
+	arr[row] = beg;
+}
+
+
+int main()
+{
+	setlocale(LC_ALL, "rus");
+	srand(time(0));
+
+	int n, m;
+	cout << "n = ";
+	cin >> n;
+
+	cout << "m = ";
+	cin >> m;
+
+	node** arr = new node * [n];
+	for (int i = 0; i < n; i++)
+	{
+		arr[i] = nullptr;
+	}
+
+	fill_matrix(arr, n, m);
+	cout << "Исходная матрица" << endl;
+	print_matrix(arr, n, m);
+
+	int row = find_max_row(arr, n, m);
+	int* vec = form_vector(arr, n, m, row);
+	cout << "Вектор" << endl;
+	for (int i = 0; i < m; i++)
+	{
+		cout << vec[i] << "\t";
+	}
+	cout << endl << endl;
+
+	sort_row_matrix(arr, vec, n, m, row);
+	cout << "Отсортированная матрица" << endl;
+	print_matrix(arr, n, m);
+
+	_CrtDumpMemoryLeaks();
+}
